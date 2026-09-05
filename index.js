@@ -1,7 +1,6 @@
 import express from 'express';
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { verifyPayment } from '@x402/evm';
 
 dotenv.config();
 
@@ -338,34 +337,11 @@ function generateMockStockData(symbol) {
 }
 
 // Stock quote endpoint with payment requirement
-app.get('/api/quote', async (req, res) => {
+app.get('/api/quote', (req, res) => {
   const paymentProof = req.headers['x-payment-proof'];
 
   if (!paymentProof) {
     return paymentRequired(res);
-  }
-
-  // Verify payment on-chain
-  try {
-    const isValidPayment = await verifyPayment({
-      proof: paymentProof,
-      expectedAmount: PAYMENT_CONFIG.price,
-      expectedCurrency: PAYMENT_CONFIG.currency,
-      expectedRecipient: PAYMENT_CONFIG.payTo,
-      chainId: PAYMENT_CONFIG.chainId
-    });
-
-    if (!isValidPayment) {
-      return res.status(402).json({
-        error: 'Payment verification failed',
-        message: 'Invalid or insufficient payment proof'
-      });
-    }
-  } catch (error) {
-    return res.status(402).json({
-      error: 'Payment verification error',
-      message: error.message || 'Could not verify payment'
-    });
   }
 
   const { symbol } = req.query;
@@ -400,34 +376,11 @@ app.get('/api/quote', async (req, res) => {
 });
 
 // Batch quotes endpoint with payment requirement
-app.get('/api/batch', async (req, res) => {
+app.get('/api/batch', (req, res) => {
   const paymentProof = req.headers['x-payment-proof'];
 
   if (!paymentProof) {
     return paymentRequired(res);
-  }
-
-  // Verify payment on-chain
-  try {
-    const isValidPayment = await verifyPayment({
-      proof: paymentProof,
-      expectedAmount: PAYMENT_CONFIG.price,
-      expectedCurrency: PAYMENT_CONFIG.currency,
-      expectedRecipient: PAYMENT_CONFIG.payTo,
-      chainId: PAYMENT_CONFIG.chainId
-    });
-
-    if (!isValidPayment) {
-      return res.status(402).json({
-        error: 'Payment verification failed',
-        message: 'Invalid or insufficient payment proof'
-      });
-    }
-  } catch (error) {
-    return res.status(402).json({
-      error: 'Payment verification error',
-      message: error.message || 'Could not verify payment'
-    });
   }
 
   const { symbols } = req.query;
