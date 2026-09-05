@@ -1,4 +1,6 @@
 import express from 'express';
+import { createPaymentMiddleware } from './payment-verification.js';
+
 import axios from 'axios';
 import dotenv from 'dotenv';
 
@@ -16,6 +18,10 @@ const PAYMENT_CONFIG = {
   chainId: 'eip155:8453',
   payTo: '0xf081ee84c0d85278a6242bc265f0b312021ebeb1'
 };
+
+// X402 Payment Verification Middleware
+const verifyPayment = createPaymentMiddleware(PAYMENT_CONFIG);
+
 
 // Root landing page
 app.get('/', (req, res) => {
@@ -219,7 +225,7 @@ app.get('/.well-known/x402', (req, res) => {
     payment: {
       scheme: 'exact',
       network: PAYMENT_CONFIG.chainId,
-      price: `$${PAYMENT_CONFIG.price}`,
+      price: '$' + PAYMENT_CONFIG.price,
       currency: PAYMENT_CONFIG.currency,
       payTo: PAYMENT_CONFIG.payTo
     },
@@ -291,22 +297,14 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     payment: {
       enabled: true,
-      price: `$${PAYMENT_CONFIG.price}`,
+      price: '$' + PAYMENT_CONFIG.price,
       currency: PAYMENT_CONFIG.currency,
       network: PAYMENT_CONFIG.chainId
     }
   });
 });
 
-// Payment required response helper
-function paymentRequired(res) {
-  return res.status(402).json({
-    error: 'Payment Required',
-    message: 'This endpoint requires x402 payment',
-    payment: {
-      scheme: 'exact',
-      network: PAYMENT_CONFIG.chainId,
-      price: `$${PAYMENT_CONFIG.price}`,
+`,
       currency: PAYMENT_CONFIG.currency,
       payTo: PAYMENT_CONFIG.payTo
     },
@@ -337,12 +335,9 @@ function generateMockStockData(symbol) {
 }
 
 // Stock quote endpoint with payment requirement
-app.get('/api/quote', (req, res) => {
-  const paymentProof = req.headers['payment-signature'] || req.headers['x-payment'];
-
-  if (!paymentProof) {
-    return paymentRequired(res);
-  }
+app.get('/api/quote', verifyPayment, async (req, res) => {
+  // Payment verified by middleware - safe to proceed
+  
 
   const { symbol } = req.query;
 
@@ -376,12 +371,9 @@ app.get('/api/quote', (req, res) => {
 });
 
 // Batch quotes endpoint with payment requirement
-app.get('/api/batch', (req, res) => {
-  const paymentProof = req.headers['payment-signature'] || req.headers['x-payment'];
-
-  if (!paymentProof) {
-    return paymentRequired(res);
-  }
+app.get('/api/batch', verifyPayment, async (req, res) => {
+  // Payment verified by middleware - safe to proceed
+  
 
   const { symbols } = req.query;
 
