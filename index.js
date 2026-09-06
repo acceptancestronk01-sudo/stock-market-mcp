@@ -449,3 +449,4 @@ export default app;
 // redeploy trigger Sat Sep  5 23:05:14     2026
 // Force redeploy Sun Sep  6 01:46:55     2026
 // Force fresh deploy Sun Sep  6 02:17:02     2026
+// Force fresh deploy after .vercel removal Sun Sep  6 02:40:03     2026
